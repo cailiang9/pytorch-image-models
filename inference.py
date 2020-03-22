@@ -74,9 +74,9 @@ def main():
     model, test_time_pool = apply_test_time_pool(model, config, args)
 
     if args.num_gpu > 1:
-        model = torch.nn.DataParallel(model, device_ids=list(range(args.num_gpu))).cuda()
+        model = torch.nn.DataParallel(model, device_ids=list(range(args.num_gpu)))#.cuda()
     else:
-        model = model.cuda()
+        pass #model = model.cuda()
 
     loader = create_loader(
         Dataset(args.data),
@@ -97,16 +97,17 @@ def main():
     topk_ids = []
     with torch.no_grad():
         for batch_idx, (input, _) in enumerate(loader):
-            input = input.cuda()
+            #input = input.cuda()
             labels = model(input)
             topk = labels.topk(k)[1]
             topk_ids.append(topk.cpu().numpy())
 
             # measure elapsed time
-            batch_time.update(time.time() - end)
+            if batch_idx>0:
+                batch_time.update(time.time() - end)
             end = time.time()
 
-            if batch_idx % args.log_freq == 0:
+            if batch_idx>0 and batch_idx % args.log_freq == 0:
                 logging.info('Predict: [{0}/{1}] Time {batch_time.val:.3f} ({batch_time.avg:.3f})'.format(
                     batch_idx, len(loader), batch_time=batch_time))
 
